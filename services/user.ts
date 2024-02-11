@@ -11,9 +11,7 @@ export const getUserByEmail = async (email: string) => {
     return user;
   } catch (e) {
     console.log(e);
-    return {
-      error: 'Something went wrong',
-    };
+    return null;
   }
 };
 
@@ -28,8 +26,6 @@ export const getUserById = async (id: string) => {
     return user;
   } catch (e) {
     console.log(e);
-    return {
-      error: 'Something went wrong',
-    };
+    return null;
   }
 };
