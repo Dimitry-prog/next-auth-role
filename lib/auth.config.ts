@@ -1,7 +1,7 @@
 import type { NextAuthConfig } from 'next-auth';
 import Credentials from '@auth/core/providers/credentials';
 import { loginSchema } from '@/features/auth/validation';
-import { getUserByEmail } from '@/services/user';
+import { getUserByEmail, getUserById } from '@/services/user';
 import bcrypt from 'bcryptjs';
 import { apiAuthPrefix, authRoutes, DEFAULT_LOGIN_REDIRECT, publicRoutes } from '@/lib/routes';
 
@@ -50,6 +50,31 @@ export default {
       }
 
       return true;
+    },
+    // async signIn({ user }) {
+    //   const isUserExist = await getUserById(user.id!);
+    //
+    //   if (!isUserExist || !isUserExist.emailVerified) return false;
+    //
+    //   return true;
+    // },
+    async jwt({ token }) {
+      if (!token.sub) return token;
+      const isUserExist = await getUserById(token.sub);
+
+      if (!isUserExist) return token;
+
+      return { ...token, role: isUserExist.role };
+    },
+    async session({ token, session }) {
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          role: token.role,
+          id: token.sub,
+        },
+      };
     },
   },
 } satisfies NextAuthConfig;

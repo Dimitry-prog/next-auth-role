@@ -6,8 +6,8 @@ import { getUserByEmail } from '@/services/user';
 import bcrypt from 'bcryptjs';
 import { db } from '@/lib/db';
 import { signIn } from '@/lib/auth';
-import { DEFAULT_LOGIN_REDIRECT } from '@/lib/routes';
 import { AuthError } from 'next-auth';
+import { DEFAULT_LOGIN_REDIRECT } from '@/lib/routes';
 
 export const login = async (data: LoginFormType) => {
   const validatedFields = loginSchema.safeParse(data);

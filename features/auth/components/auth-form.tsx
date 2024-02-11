@@ -52,16 +52,10 @@ const AuthForm = ({ variant = 'login' }: AuthFormProps) => {
     startTransition(() => {
       if (variant === 'login') {
         login(data).then((res) => {
-          if (res.error) {
+          if (res?.error) {
             setServerMsg((prev) => ({
               ...prev,
               error: res.error,
-            }));
-          }
-          if (res.success) {
-            setServerMsg((prev) => ({
-              ...prev,
-              success: res.success,
             }));
           }
         });
