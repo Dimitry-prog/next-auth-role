@@ -21,6 +21,7 @@ import Loader from '@/components/shared/loader';
 import { loginInitValues, registerInitValues } from '@/features/auth/utils/constants';
 import AuthCardWrapper from '@/features/auth/components/auth-card-wrapper';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 
 type AuthFormProps = {
   variant?: 'register' | 'login';
@@ -149,6 +150,12 @@ const AuthForm = ({ variant = 'login' }: AuthFormProps) => {
                       type="password"
                     />
                   </FormControl>
+
+                  {variant === 'login' && (
+                    <Button asChild size="sm" variant="link" className="p-0 font-normal">
+                      <Link href="/auth/reset">Forgot password?</Link>
+                    </Button>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}

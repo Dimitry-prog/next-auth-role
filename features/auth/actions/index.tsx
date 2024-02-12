@@ -1,16 +1,22 @@
 'use server';
 
-import { LoginFormType } from '@/features/auth/types';
-import { loginSchema, registerSchema } from '@/features/auth/validation';
+import { LoginFormType, NewPasswordFormType, ResetFormType } from '@/features/auth/types';
+import {
+  loginSchema,
+  newPasswordSchema,
+  registerSchema,
+  resetSchema,
+} from '@/features/auth/validation';
 import { getUserByEmail } from '@/services/user';
 import bcrypt from 'bcryptjs';
 import { db } from '@/lib/db';
 import { signIn } from '@/lib/auth';
 import { AuthError } from 'next-auth';
 import { DEFAULT_LOGIN_REDIRECT } from '@/lib/routes';
-import { generateVerificationToken } from '@/lib/tokens';
-import { sendVerificationEmail } from '@/lib/mail';
+import { generatePasswordResetToken, generateVerificationToken } from '@/lib/tokens';
+import { sendPasswordResetEmail, sendVerificationEmail } from '@/lib/mail';
 import { getVerificationTokenByToken } from '@/services/verification-token';
+import { getPasswordResetTokenByToken } from '@/services/password-reset-token';
 
 export const login = async (data: LoginFormType) => {
   const validatedFields = loginSchema.safeParse(data);
@@ -155,6 +161,101 @@ export const newVerification = async (token: string) => {
 
     return {
       success: ' Email verified!',
+    };
+  } catch (e) {
+    console.log(e);
+    return {
+      error: 'Something went wrong!',
+    };
+  }
+};
+
+export const reset = async (values: ResetFormType) => {
+  const validatedField = resetSchema.safeParse(values);
+
+  if (!validatedField.success) {
+    return {
+      error: 'Invalid email!',
+    };
+  }
+
+  const { email } = validatedField.data;
+
+  const existingUser = await getUserByEmail(email);
+
+  if (!existingUser) {
+    return {
+      error: 'Email not found!',
+    };
+  }
+
+  const passwordResetToken = await generatePasswordResetToken(email);
+  await sendPasswordResetEmail(passwordResetToken.email, passwordResetToken.token);
+
+  return { success: 'Reset email sent!' };
+};
+
+export const newPassword = async (values: NewPasswordFormType, token?: string | null) => {
+  if (!token) {
+    return {
+      error: 'Missing token!',
+    };
+  }
+
+  const validatedFields = newPasswordSchema.safeParse(values);
+
+  if (!validatedFields.success) {
+    return {
+      error: 'Invalid password!',
+    };
+  }
+
+  const { password } = validatedFields.data;
+
+  const existingToken = await getPasswordResetTokenByToken(token!);
+
+  if (!existingToken) {
+    return {
+      error: 'Invalid token!',
+    };
+  }
+
+  const hasExpired = new Date(existingToken.expires) < new Date();
+
+  if (hasExpired) {
+    return {
+      error: 'Token has expired!',
+    };
+  }
+
+  const existingUser = await getUserByEmail(existingToken.email);
+
+  if (!existingUser) {
+    return {
+      error: 'Email does not exist!',
+    };
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await db.user.update({
+      where: {
+        id: existingUser.id,
+      },
+      data: {
+        password: hashedPassword,
+      },
+    });
+
+    await db.passwordResetToken.delete({
+      where: {
+        id: existingToken.id,
+      },
+    });
+
+    return {
+      success: 'Password updated!',
     };
   } catch (e) {
     console.log(e);
