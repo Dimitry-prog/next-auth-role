@@ -20,12 +20,18 @@ import FormServerMessage from '@/components/shared/form-server-message';
 import Loader from '@/components/shared/loader';
 import { loginInitValues, registerInitValues } from '@/features/auth/utils/constants';
 import AuthCardWrapper from '@/features/auth/components/auth-card-wrapper';
+import { useSearchParams } from 'next/navigation';
 
 type AuthFormProps = {
   variant?: 'register' | 'login';
 };
 
 const AuthForm = ({ variant = 'login' }: AuthFormProps) => {
+  const searchParams = useSearchParams();
+  const urlError =
+    searchParams.get('error') === 'OAuthAccountNotLinked'
+      ? 'Email already use in different provider!'
+      : '';
   const [isPending, startTransition] = useTransition();
   const [serverMsg, setServerMsg] = useState<{
     error: string;
@@ -143,7 +149,7 @@ const AuthForm = ({ variant = 'login' }: AuthFormProps) => {
             />
           </div>
 
-          <FormServerMessage type="error" message={serverMsg.error} />
+          <FormServerMessage type="error" message={serverMsg.error || urlError} />
 
           <FormServerMessage type="success" message={serverMsg.success} />
 

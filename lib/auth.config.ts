@@ -4,9 +4,24 @@ import { loginSchema } from '@/features/auth/validation';
 import { getUserByEmail, getUserById } from '@/services/user';
 import bcrypt from 'bcryptjs';
 import { apiAuthPrefix, authRoutes, DEFAULT_LOGIN_REDIRECT, publicRoutes } from '@/lib/routes';
+import GitHub from '@auth/core/providers/github';
+import Google from '@auth/core/providers/google';
+import { db } from '@/lib/db';
 
 export default {
+  pages: {
+    signIn: '/auth/login',
+    error: '/auth/error',
+  },
   providers: [
+    GitHub({
+      clientId: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    }),
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
     Credentials({
       async authorize(credentials) {
         const validatedFields = loginSchema.safeParse(credentials);
@@ -75,6 +90,16 @@ export default {
           id: token.sub,
         },
       };
+    },
+  },
+  events: {
+    async linkAccount({ user }) {
+      await db.user.update({
+        where: {
+          id: user.id,
+        },
+        data: { emailVerified: new Date() },
+      });
     },
   },
 } satisfies NextAuthConfig;
