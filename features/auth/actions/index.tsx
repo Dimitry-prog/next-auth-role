@@ -8,6 +8,8 @@ import { db } from '@/lib/db';
 import { signIn } from '@/lib/auth';
 import { AuthError } from 'next-auth';
 import { DEFAULT_LOGIN_REDIRECT } from '@/lib/routes';
+import { generateVerificationToken } from '@/lib/tokens';
+import { sendVerificationEmail } from '@/lib/mail';
 
 export const login = async (data: LoginFormType) => {
   const validatedFields = loginSchema.safeParse(data);
@@ -19,6 +21,22 @@ export const login = async (data: LoginFormType) => {
   }
 
   const { email, password } = validatedFields.data;
+  const existingUser = await getUserByEmail(email);
+
+  if (!existingUser || !existingUser.email || !existingUser.password) {
+    return {
+      error: 'Email does not exist!',
+    };
+  }
+
+  if (!existingUser.emailVerified) {
+    const verificationToken = await generateVerificationToken(existingUser.email);
+    await sendVerificationEmail(verificationToken.email, verificationToken.token);
+
+    return {
+      success: 'Visit your email to confirm register!',
+    };
+  }
 
   try {
     await signIn('credentials', {
@@ -34,9 +52,13 @@ export const login = async (data: LoginFormType) => {
           return {
             error: 'Invalid credentials!',
           };
+        case 'AuthorizedCallbackError':
+          return {
+            error: 'Authorized error',
+          };
         default:
           return {
-            error: 'Failed to login.',
+            error: 'Something went wrong!',
           };
       }
     }
@@ -74,8 +96,11 @@ export const register = async (data: LoginFormType) => {
       },
     });
 
+    const verificationToken = await generateVerificationToken(email);
+    await sendVerificationEmail(verificationToken.email, verificationToken.token);
+
     return {
-      success: 'User created',
+      success: 'Confirmation email sent!',
     };
   } catch (e) {
     console.log(e);

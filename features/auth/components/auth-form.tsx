@@ -64,6 +64,12 @@ const AuthForm = ({ variant = 'login' }: AuthFormProps) => {
               error: res.error,
             }));
           }
+          if (res?.success) {
+            setServerMsg((prev) => ({
+              ...prev,
+              success: res.success,
+            }));
+          }
         });
       } else {
         register(data).then((res) => {
