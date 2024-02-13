@@ -7,6 +7,7 @@ import { apiAuthPrefix, authRoutes, DEFAULT_LOGIN_REDIRECT, publicRoutes } from 
 import GitHub from '@auth/core/providers/github';
 import Google from '@auth/core/providers/google';
 import { db } from '@/lib/db';
+import { getTwoFactorConfirmationByUserId } from '@/services/two-factor-confirmation';
 
 export default {
   pages: {
@@ -66,13 +67,6 @@ export default {
 
       return true;
     },
-    // async signIn({ user }) {
-    //   const isUserExist = await getUserById(user.id!);
-    //
-    //   if (!isUserExist || !isUserExist.emailVerified) return false;
-    //
-    //   return true;
-    // },
     async jwt({ token }) {
       if (!token.sub) return token;
       const isUserExist = await getUserById(token.sub);
@@ -97,6 +91,20 @@ export default {
       const existingUser = await getUserById(user.id!);
 
       if (!existingUser?.emailVerified) return false;
+
+      if (existingUser.isTwoFactorEnabled) {
+        const twoFactorConfirmation = await getTwoFactorConfirmationByUserId(user.id!);
+
+        if (!twoFactorConfirmation) {
+          return false;
+        }
+
+        await db.twoFactorConfirmation.delete({
+          where: {
+            id: twoFactorConfirmation.id,
+          },
+        });
+      }
 
       return true;
     },

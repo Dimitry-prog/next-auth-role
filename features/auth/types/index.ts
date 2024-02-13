@@ -6,6 +6,8 @@ import {
   resetSchema,
 } from '@/features/auth/validation';
 
+export type AuthFormType = RegisterFormType | LoginFormType;
+
 export type LoginFormType = z.infer<typeof loginSchema>;
 
 export type RegisterFormType = z.infer<typeof registerSchema>;

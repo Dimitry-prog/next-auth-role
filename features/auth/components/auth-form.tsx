@@ -1,7 +1,7 @@
 'use client';
 
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { LoginFormType, RegisterFormType } from '@/features/auth/types';
+import { AuthFormType } from '@/features/auth/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, registerSchema } from '@/features/auth/validation';
 import {
@@ -34,23 +34,23 @@ const AuthForm = ({ variant = 'login' }: AuthFormProps) => {
       ? 'Email already use in different provider!'
       : '';
   const [isPending, startTransition] = useTransition();
+  const [showTwoFactor, setShowTwoFactor] = useState(false);
   const [serverMsg, setServerMsg] = useState<{
-    error: string;
-    success: string;
+    error?: string;
+    success?: string;
   }>({
     error: '',
     success: '',
   });
 
-  type FormType = typeof variant extends 'register' ? LoginFormType : RegisterFormType;
   const initValues = variant === 'register' ? registerInitValues : loginInitValues;
 
-  const form = useForm<FormType>({
+  const form = useForm<AuthFormType>({
     resolver: zodResolver(variant === 'register' ? registerSchema : loginSchema),
     defaultValues: initValues,
   });
 
-  const onSubmit: SubmitHandler<FormType> = (data) => {
+  const onSubmit: SubmitHandler<AuthFormType> = (data) => {
     setServerMsg({
       error: '',
       success: '',
@@ -60,16 +60,17 @@ const AuthForm = ({ variant = 'login' }: AuthFormProps) => {
       if (variant === 'login') {
         login(data).then((res) => {
           if (res?.error) {
-            setServerMsg((prev) => ({
-              ...prev,
+            setServerMsg({
               error: res.error,
-            }));
+            });
           }
           if (res?.success) {
-            setServerMsg((prev) => ({
-              ...prev,
+            setServerMsg({
               success: res.success,
-            }));
+            });
+          }
+          if (res?.twoFactor) {
+            setShowTwoFactor(true);
           }
         });
       } else {
@@ -117,49 +118,69 @@ const AuthForm = ({ variant = 'login' }: AuthFormProps) => {
               />
             )}
 
-            <FormField
-              name="email"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      disabled={isPending}
-                      placeholder="example@gmail.com"
-                      type="email"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {showTwoFactor && variant === 'login' && (
+              <FormField
+                name="code"
+                control={form.control}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Two Factor Code</FormLabel>
+                    <FormControl>
+                      <Input {...field} disabled={isPending} placeholder="Enter code here" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
-            <FormField
-              name="password"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      disabled={isPending}
-                      placeholder="Enter your password"
-                      type="password"
-                    />
-                  </FormControl>
-
-                  {variant === 'login' && (
-                    <Button asChild size="sm" variant="link" className="p-0 font-normal">
-                      <Link href="/auth/reset">Forgot password?</Link>
-                    </Button>
+            {!showTwoFactor && (
+              <>
+                <FormField
+                  name="email"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          disabled={isPending}
+                          placeholder="example@gmail.com"
+                          type="email"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                />
+
+                <FormField
+                  name="password"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          disabled={isPending}
+                          placeholder="Enter your password"
+                          type="password"
+                        />
+                      </FormControl>
+
+                      {variant === 'login' && (
+                        <Button asChild size="sm" variant="link" className="p-0 font-normal">
+                          <Link href="/auth/reset">Forgot password?</Link>
+                        </Button>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
           </div>
 
           <FormServerMessage type="error" message={serverMsg.error || urlError} />
@@ -167,7 +188,15 @@ const AuthForm = ({ variant = 'login' }: AuthFormProps) => {
           <FormServerMessage type="success" message={serverMsg.success} />
 
           <Button disabled={isPending} type="submit" className="w-full">
-            {isPending ? <Loader /> : variant === 'login' ? 'Login' : 'Create an account'}
+            {isPending ? (
+              <Loader />
+            ) : variant === 'login' && !showTwoFactor ? (
+              'Login'
+            ) : showTwoFactor ? (
+              'Confirm'
+            ) : (
+              'Create an account'
+            )}
           </Button>
         </form>
       </Form>

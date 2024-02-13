@@ -5,7 +5,7 @@ export const registerInitValues = {
 };
 
 export const loginInitValues = {
-  name: '',
   email: '',
   password: '',
+  code: '',
 };
