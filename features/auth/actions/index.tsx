@@ -23,6 +23,8 @@ import { getVerificationTokenByToken } from '@/services/verification-token';
 import { getPasswordResetTokenByToken } from '@/services/password-reset-token';
 import { getTwoFactorTokenByEmail } from '@/services/two-factor-token';
 import { getTwoFactorConfirmationByUserId } from '@/services/two-factor-confirmation';
+import { currentRole } from '@/lib/current-user';
+import { UserRole } from '@prisma/client';
 
 export const login = async (data: LoginFormType) => {
   const validatedFields = loginSchema.safeParse(data);
@@ -328,4 +330,18 @@ export const newPassword = async (values: NewPasswordFormType, token?: string | 
 
 export const logout = async () => {
   await signOut();
+};
+
+export const adminAction = async () => {
+  const role = await currentRole();
+
+  if (role === UserRole.ADMIN) {
+    return {
+      success: ' Allowed Server Action!',
+    };
+  }
+
+  return {
+    error: ' Forbidden Server Action!',
+  };
 };

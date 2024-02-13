@@ -5,6 +5,7 @@ import { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { auth } from '@/lib/auth';
 import { SessionProvider } from 'next-auth/react';
+import { Toaster } from '@/components/ui/sonner';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -28,6 +29,7 @@ export default async function RootLayout({
             inter.className
           )}
         >
+          <Toaster />
           {children}
         </body>
       </SessionProvider>
