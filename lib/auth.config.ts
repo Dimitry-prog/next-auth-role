@@ -73,7 +73,11 @@ export default {
 
       if (!isUserExist) return token;
 
-      return { ...token, role: isUserExist.role };
+      return {
+        ...token,
+        role: isUserExist.role,
+        isTwoFactorEnabled: isUserExist.isTwoFactorEnabled,
+      };
     },
     async session({ token, session }) {
       return {
@@ -82,6 +86,7 @@ export default {
           ...session.user,
           role: token.role,
           id: token.sub,
+          isTwoFactorEnabled: token.isTwoFactorEnabled,
         },
       };
     },

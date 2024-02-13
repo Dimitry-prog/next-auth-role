@@ -3,10 +3,9 @@ import { Button } from '@/components/ui/button';
 
 const SettingPage = async () => {
   const session = await auth();
-  console.log(session?.user);
-
+  console.log(session);
   return (
-    <div>
+    <div className="">
       SettingPage
       <form
         action={async () => {

@@ -10,7 +10,7 @@ import {
 import { getUserByEmail } from '@/services/user';
 import bcrypt from 'bcryptjs';
 import { db } from '@/lib/db';
-import { signIn } from '@/lib/auth';
+import { signIn, signOut } from '@/lib/auth';
 import { AuthError } from 'next-auth';
 import { DEFAULT_LOGIN_REDIRECT } from '@/lib/routes';
 import {
@@ -324,4 +324,8 @@ export const newPassword = async (values: NewPasswordFormType, token?: string | 
       error: 'Something went wrong!',
     };
   }
+};
+
+export const logout = async () => {
+  await signOut();
 };
