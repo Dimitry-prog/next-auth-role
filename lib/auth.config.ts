@@ -8,6 +8,7 @@ import GitHub from '@auth/core/providers/github';
 import Google from '@auth/core/providers/google';
 import { db } from '@/lib/db';
 import { getTwoFactorConfirmationByUserId } from '@/services/two-factor-confirmation';
+import { getAccountByUserId } from '@/services/account';
 
 export default {
   pages: {
@@ -69,24 +70,26 @@ export default {
     },
     async jwt({ token }) {
       if (!token.sub) return token;
-      const isUserExist = await getUserById(token.sub);
+      const existingUser = await getUserById(token.sub);
 
-      if (!isUserExist) return token;
+      if (!existingUser) return token;
+
+      const existingAccount = await getAccountByUserId(existingUser.id);
 
       return {
         ...token,
-        role: isUserExist.role,
-        isTwoFactorEnabled: isUserExist.isTwoFactorEnabled,
+        ...existingUser,
+        isOAuth: !!existingAccount,
       };
     },
     async session({ token, session }) {
+      delete token['password'];
+
       return {
         ...session,
         user: {
           ...session.user,
-          role: token.role,
-          id: token.sub,
-          isTwoFactorEnabled: token.isTwoFactorEnabled,
+          ...token,
         },
       };
     },

@@ -1,21 +1,17 @@
-import { auth, signOut } from '@/lib/auth';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import SettingsForm from '@/features/settings/components/settings-form';
 
-const SettingPage = async () => {
-  const session = await auth();
-  console.log(session);
+const SettingPage = () => {
   return (
-    <div className="">
-      SettingPage
-      <form
-        action={async () => {
-          'use server';
-          await signOut();
-        }}
-      >
-        <Button type="submit">Sign out</Button>
-      </form>
-    </div>
+    <Card>
+      <CardHeader>
+        <p className="text-center text-2xl font-semibold">Settings</p>
+      </CardHeader>
+
+      <CardContent>
+        <SettingsForm />
+      </CardContent>
+    </Card>
   );
 };
 
