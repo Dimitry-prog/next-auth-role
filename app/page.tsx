@@ -18,10 +18,16 @@ export default function Home() {
 
         <p className="text-lg text-white"> A simple authentication service</p>
 
-        <div>
+        <div className="space-x-2">
           <LoginButton>
             <Button variant="secondary" size="lg">
               Sign in
+            </Button>
+          </LoginButton>
+
+          <LoginButton mode="modal">
+            <Button asChild size="lg">
+              <p>Sign in with modal</p>
             </Button>
           </LoginButton>
         </div>

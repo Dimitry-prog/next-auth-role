@@ -29,6 +29,7 @@ type AuthFormProps = {
 
 const AuthForm = ({ variant = 'login' }: AuthFormProps) => {
   const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get('callbackUrl');
   const urlError =
     searchParams.get('error') === 'OAuthAccountNotLinked'
       ? 'Email already use in different provider!'
@@ -58,7 +59,7 @@ const AuthForm = ({ variant = 'login' }: AuthFormProps) => {
 
     startTransition(() => {
       if (variant === 'login') {
-        login(data).then((res) => {
+        login(data, callbackUrl).then((res) => {
           if (res?.error) {
             setServerMsg({
               error: res.error,

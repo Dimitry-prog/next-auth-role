@@ -26,7 +26,7 @@ import { getTwoFactorConfirmationByUserId } from '@/services/two-factor-confirma
 import { currentRole } from '@/lib/current-user';
 import { UserRole } from '@prisma/client';
 
-export const login = async (data: LoginFormType) => {
+export const login = async (data: LoginFormType, callbackUrl?: string | null) => {
   const validatedFields = loginSchema.safeParse(data);
 
   if (!validatedFields.success) {
@@ -112,7 +112,7 @@ export const login = async (data: LoginFormType) => {
     await signIn('credentials', {
       email,
       password,
-      redirectTo: DEFAULT_LOGIN_REDIRECT,
+      redirectTo: callbackUrl || DEFAULT_LOGIN_REDIRECT,
     });
   } catch (e) {
     console.log(e);
